@@ -24,19 +24,19 @@ public class RegionService {
         if (regionRepository.findByNameRegion(region.getNameRegion()).isPresent()) {
             throw new RegionYaExisteException("La región ya existe: " + region.getNameRegion());
         }
-
+        region.setStatus(1); // Al crear, la región está activa
         return regionRepository.save(region);
     }
 
     // Obtener una región por ID
-    public Optional<RegionModel> getRegionById(Long id) {
-        return regionRepository.findById(id);
+    public Optional<RegionModel> getRegionById(Long idRegion) {
+        return regionRepository.findById(idRegion);
     }
 
     // Actualizar una región
-    public RegionModel updateRegion(Long id, RegionModel regionDetails) {
-        RegionModel region = regionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Region not found with id " + id));
+    public RegionModel updateRegion(Long idRegion, RegionModel regionDetails) {
+        RegionModel region = regionRepository.findById(idRegion)
+                .orElseThrow(() -> new RuntimeException("Region not found with id " + idRegion));
 
         region.setNameRegion(regionDetails.getNameRegion());
         region.setDescription(regionDetails.getDescription());
@@ -44,9 +44,12 @@ public class RegionService {
     }
 
     // Eliminar una región
-    public void deleteRegion(Long id) {
-        RegionModel region = regionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Region not found with id " + id));
-        regionRepository.delete(region);
+    public void updateRegionStatus(Long idRegion, int status) {
+        Optional<RegionModel> region = regionRepository.findById(idRegion);
+        if (region.isPresent()) {
+            RegionModel updatedRegion = region.get();
+            updatedRegion.setStatus(status);
+            regionRepository.save(updatedRegion);
+        }
     }
 }

@@ -23,24 +23,24 @@ public class RegionController {
 
     // Crear una nueva región
     @PostMapping("/register")
-    public ResponseEntity<RegionModel> crearRegion(@RequestBody RegionModel region) {
+    public ResponseEntity<RegionModel> createRegion(@RequestBody RegionModel region) {
         RegionModel nuevaRegion = regionService.createRegion(region);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevaRegion);
     }
 
     // Obtener una región por ID
     @GetMapping("/{id}")
-    public ResponseEntity<RegionModel> getRegionById(@PathVariable Long id) {
-        return regionService.getRegionById(id)
+    public ResponseEntity<RegionModel> getRegionById(@PathVariable Long idRegion) {
+        return regionService.getRegionById(idRegion)
                 .map(region -> ResponseEntity.ok().body(region))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // Actualizar una región
-    @PutMapping("/{id}")
-    public ResponseEntity<RegionModel> updateRegion(@PathVariable Long id, @RequestBody RegionModel regionDetails) {
+    @PutMapping("/{idRegion}")
+    public ResponseEntity<RegionModel> updateRegion(@PathVariable Long idRegion, @RequestBody RegionModel regionDetails) {
         try {
-            RegionModel updatedRegion = regionService.updateRegion(id, regionDetails);
+            RegionModel updatedRegion = regionService.updateRegion(idRegion, regionDetails);
             return ResponseEntity.ok(updatedRegion);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -48,13 +48,9 @@ public class RegionController {
     }
 
     // Eliminar una región
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRegion(@PathVariable Long id) {
-        try {
-            regionService.deleteRegion(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("/status/{idRegion}")
+    public ResponseEntity<Void> updateRegionStatus(@PathVariable Long idRegion, @RequestParam int status) {
+        regionService.updateRegionStatus(idRegion, status);
+        return ResponseEntity.ok().build();
     }
 }
