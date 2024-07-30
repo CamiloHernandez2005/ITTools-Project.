@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface RegionRepository extends JpaRepository<RegionModel, Long> {
     Optional<RegionModel> findByNameRegion(String nameRegion);
     List<RegionModel> findByStatus(int status);
-    Optional<RegionModel> findByIdRegionAndStatus(Long idRegion, int status);
+    Optional<RegionModel> findByIdRegionAndStatus(Integer idRegion, int status);
 }

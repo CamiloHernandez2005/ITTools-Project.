@@ -1,74 +1,57 @@
 package com.example.ITTools.Region.Models;
 
+import com.example.ITTools.Region.DTO.RegionDTO;
+import com.example.ITTools.Server.Models.ServerModel;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
-import org.antlr.v4.runtime.misc.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
-@Table(name="Region")
-
+@Table(name = "regions")
 public class RegionModel {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
+    @Setter
     private Long idRegion;
 
-
     @Column(nullable = false)
+    @Getter @Setter
     private String nameRegion;
 
+    @Column(nullable = false)
+    @Getter @Setter
+    private String description;
 
     @Column(nullable = false)
-    private String description;
-    private int status; // 1: activo, 0: inactivo
+    @Getter @Setter
+    private int status;
+    // 1: activo, 0: inactivo
+   // Ignora la propiedad en la serialización
+    @OneToMany(mappedBy = "region", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ServerModel> servers;
 
-    // Constructor por defecto
-    public RegionModel() {}
-
-    public RegionModel(Long idRegion, String nameRegion, String description) {
-        this.idRegion = idRegion;
-        this.nameRegion = nameRegion;
-        this.description = description;
-        this.status= status;
-
+    public RegionDTO toDTO() {
+        RegionDTO dto = new RegionDTO();
+        dto.setIdRegion(this.idRegion);
+        dto.setNameRegion(this.nameRegion);
+        dto.setDescription(this.description);
+        dto.setStatus(this.status);
+        dto.setServers(this.servers != null ? this.servers.stream()
+                .map(ServerModel::toDTO)
+                .collect(Collectors.toSet()) : null);
+        return dto;
     }
 
-    public int getStatus() {
-        return status;
-    }
+    // Getters and setters
 
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public RegionModel(String nameRegion, String description) {
-        this.nameRegion = nameRegion;
-        this.description = description;
-        this.status= status;
-    }
-
-    // Getters y Setters
-    public Long getIdRegion() {
-        return idRegion;
-    }
-
-    public void setIdRegion(Long idRegion) {
-        this.idRegion = idRegion;
-    }
-
-    public String getNameRegion() {
-        return nameRegion;
-    }
-
-    public void setNameRegion(String nameRegion) {
-        this.nameRegion = nameRegion;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }
