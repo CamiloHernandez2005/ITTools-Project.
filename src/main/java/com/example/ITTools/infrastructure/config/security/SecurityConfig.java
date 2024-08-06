@@ -10,6 +10,8 @@ import org.springframework.security.config.annotation.web.configurers.CorsConfig
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -37,7 +39,4 @@ public class SecurityConfig {
         return http.build();
     }
 
-    private static Customizer<CorsConfigurer<HttpSecurity>> withDefaults() {
-        return cors -> {}; // Customizer para permitir configuraciones predeterminadas
-    }
 }

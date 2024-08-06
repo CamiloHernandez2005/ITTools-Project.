@@ -10,21 +10,18 @@ public class AuthRepo implements IAuthRepo {
     private final RegisterUserRepo registerUserRepo;
     private final LoginUserRepo loginUserRepo;
 
-    public AuthRepo(RegisterUserRepo registerUserRepo,
-            LoginUserRepo loginUserRepo) {
+    public AuthRepo(RegisterUserRepo registerUserRepo, LoginUserRepo loginUserRepo) {
         this.registerUserRepo = registerUserRepo;
         this.loginUserRepo = loginUserRepo;
     }
 
     @Override
-    public void register(SaveUserDTO saveUser) {
-        registerUserRepo.register(saveUser);
+    public void register(SaveUserDTO saveUserDTO) {
+        registerUserRepo.register(saveUserDTO);
     }
 
     @Override
     public String login(LoginDTO loginDTO) throws Exception {
         return loginUserRepo.login(loginDTO);
     }
-
-
 }

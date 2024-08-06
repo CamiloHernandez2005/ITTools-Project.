@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -39,21 +40,27 @@ public class JpaUserRepositoryAdapter implements AuthRepositoryPort {
 
     @Override
     public void register(SaveUserDTO saveUserDTO) {
-        if (userRepo.findByUsername(saveUserDTO.getEmail()).isPresent()){
-            throw new UnsupportedOperationException(" email " + saveUserDTO.getEmail() + " exist");
+        if (userRepo.findByUsername(saveUserDTO.getEmail()).isPresent()) {
+            throw new UnsupportedOperationException("Email " + saveUserDTO.getEmail() + " exists");
         }
         UserEntity user = new UserEntity();
-        if (saveUserDTO.getRoles().isEmpty()) {
-           throw new UnsupportedOperationException(" role not present");
 
+        Set<RoleEntity> setRole = new HashSet<>();
+
+        if (saveUserDTO.getRoles().isEmpty()) {
+            // Si no se especifican roles, asigna el rol "USER" por defecto
+            RoleEntity defaultRole = roleRepo.findByAuthority("USER")
+                    .orElseThrow(() -> new RuntimeException("Default role 'USER' not found"));
+            setRole.add(defaultRole);
         } else {
-            Set<RoleEntity> setRole = new HashSet<RoleEntity>();
             for (String role : saveUserDTO.getRoles()) {
-                RoleEntity roleFind = roleRepo.findByAuthority(role).orElseThrow();
+                RoleEntity roleFind = roleRepo.findByAuthority(role)
+                        .orElseThrow(() -> new RuntimeException("Role " + role + " not found"));
                 setRole.add(roleFind);
             }
-            user.setAuthorities(setRole);
         }
+
+        user.setAuthorities(setRole);
         user.setUsername(saveUserDTO.getEmail());
         String passwordString = passwordEncoder.encode(saveUserDTO.getPassword());
         user.setPassword(passwordString);
@@ -89,6 +96,4 @@ public class JpaUserRepositoryAdapter implements AuthRepositoryPort {
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
-
-
 }
