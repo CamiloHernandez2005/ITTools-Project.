@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/**").permitAll() // Permitir acceso sin autenticación a /auth/**
+                                .requestMatchers("/auth/login").permitAll() // Permitir acceso sin autenticación a /auth/**
                                 .anyRequest().authenticated() // Requiere autenticación para cualquier otra solicitud
                 )
                 .oauth2ResourceServer(oauth2 ->
