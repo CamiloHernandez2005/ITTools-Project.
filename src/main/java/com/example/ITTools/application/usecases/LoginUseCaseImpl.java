@@ -15,5 +15,4 @@ public class LoginUseCaseImpl implements LoginUserRepo {
     public String login(LoginDTO loginDTO) throws Exception {
         return authRepositoryPort.login(loginDTO);
     }
-
 }
