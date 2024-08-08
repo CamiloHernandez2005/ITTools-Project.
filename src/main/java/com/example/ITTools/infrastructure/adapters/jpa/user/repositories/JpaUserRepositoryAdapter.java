@@ -1,5 +1,7 @@
 package com.example.ITTools.infrastructure.adapters.jpa.user.repositories;
 
+
+import com.example.ITTools.application.usecases.GoogleTokenService;
 import com.example.ITTools.domain.ports.in.auth.dtos.GoogleTokenDTO;
 import com.example.ITTools.domain.ports.in.auth.dtos.LoginDTO;
 import com.example.ITTools.domain.ports.in.auth.dtos.SaveUserDTO;
@@ -7,19 +9,19 @@ import com.example.ITTools.domain.ports.out.auth.AuthRepositoryPort;
 import com.example.ITTools.infrastructure.adapters.jpa.role.repositories.JpaRoleRepository;
 import com.example.ITTools.infrastructure.entities.RoleEntity;
 import com.example.ITTools.infrastructure.entities.UserEntity;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.util.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,20 +31,62 @@ public class JpaUserRepositoryAdapter implements AuthRepositoryPort {
     private final JpaRoleRepository roleRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
-    private final RestTemplate restTemplate; // Para hacer llamadas HTTP a la API de Google
+    private final GoogleTokenService googleTokenService;
 
-    public JpaUserRepositoryAdapter(JpaUserRepository userRepo, JpaRoleRepository roleRepo, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, RestTemplate restTemplate) {
+    @Value("${google.clientId}")
+    private String googleClientId;
+
+
+    public JpaUserRepositoryAdapter(JpaUserRepository userRepo, JpaRoleRepository roleRepo, PasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, GoogleTokenService googleTokenService) {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtEncoder = jwtEncoder;
-        this.restTemplate = restTemplate;
+        this.googleTokenService = googleTokenService;
     }
+
 
     @Override
     public String authenticateWithGoogle(GoogleTokenDTO googleTokenDTO) throws Exception {
-        return "";
+        try {
+            // Verificar el token de Google
+            GoogleIdToken.Payload payload = googleTokenService.verifyToken(googleTokenDTO.getToken());
+            String email = payload.getEmail(); // Método correcto para obtener el email
+
+            // Verificar si el usuario ya está registrado
+            UserEntity user = userRepo.findByUsername(email).orElseGet(() -> {
+                // Si no está registrado, crear un nuevo usuario
+                UserEntity newUser = new UserEntity();
+                newUser.setUsername(email);
+                newUser.setFullName((String) payload.get("name")); // Usa el método get(String) correctamente
+                newUser.setAuthorities(Collections.singleton(roleRepo.findByAuthority("USER")
+                        .orElseThrow(() -> new RuntimeException("Default role 'USER' not found"))));
+                newUser.setStatus(true);
+                return userRepo.save(newUser);
+            });
+
+            // Generar un JWT para la aplicación
+            Instant now = Instant.now();
+            long expiry = 36000L; // 10 hours
+
+            String roles = user.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.joining(" "));
+
+            JwtClaimsSet claims = JwtClaimsSet.builder()
+                    .issuer("self")
+                    .issuedAt(now)
+                    .expiresAt(now.plusSeconds(expiry))
+                    .subject(user.getUsername())
+                    .claim("scope", roles)
+                    .build();
+
+            return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        } catch (Exception e) {
+            throw new Exception("Google authentication failed: " + e.getMessage(), e);
+        }
     }
+
 
     @Override
     public void register(SaveUserDTO saveUserDTO) {

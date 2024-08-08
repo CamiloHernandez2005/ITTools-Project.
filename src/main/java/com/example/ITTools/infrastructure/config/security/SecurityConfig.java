@@ -2,11 +2,9 @@ package com.example.ITTools.infrastructure.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -29,7 +27,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/auth/login").permitAll() // Permitir acceso sin autenticación a /auth/**
+                                .requestMatchers("/auth/login", "/auth/login/google").permitAll() // Permitir acceso sin autenticación
                                 .anyRequest().authenticated() // Requiere autenticación para cualquier otra solicitud
                 )
                 .oauth2ResourceServer(oauth2 ->
@@ -38,5 +36,5 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 }
+
